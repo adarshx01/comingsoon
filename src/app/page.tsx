@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 const MAX_CHARACTERS = 100
 
 const App: React.FC = () => {
+  const message = "I'm building a platform to bring you the latest in tech, from product reviews & robotics to programming, mobile dev, and more! Stay tuned!";
   const [voteCount, setVoteCount] = useState<number>(0)
   const [hasVoted, setHasVoted] = useState<boolean>(false)
   // const [voteMessage, setVoteMessage] = useState<string>('')
@@ -83,7 +84,7 @@ const App: React.FC = () => {
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
         
           <span
-            className="text-4xl md:text-5xl font-bold mb-8"
+            className="text-4xl md:text-5xl font-bold mb-8 top-6"
           >
             Coming Soon
           </span>
@@ -95,12 +96,15 @@ const App: React.FC = () => {
               fontSize: '0.875rem', // text-sm
               color: 'rgb(209 213 219)', // text-gray-300
               maxWidth: '36rem',
-              margin: '0 auto',
-              lineHeight: '1.625'
+              margin: '1rem 0 0 0', // Added 1rem top margin
+              lineHeight: '1.625',
             }}
           >
-            I&apos;am building an exciting platform to bring you the latest in tech&apos;, from product reviews and robotics to programming&apos;, mobile dev&apos;, and more! Stay tuned!
+            <span className='mt-4'>
+              {message}
+            </span>
           </motion.p>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
