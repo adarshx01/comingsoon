@@ -17,10 +17,9 @@ const App: React.FC = () => {
   const message = "I'm building a platform to bring you the latest in tech, from product reviews & robotics to programming, mobile dev, and more! Stay tuned!";
   const [voteCount, setVoteCount] = useState<number>(0)
   const [hasVoted, setHasVoted] = useState<boolean>(false)
-  // const [voteMessage, setVoteMessage] = useState<string>('')
+  const [voteMessage, setVoteMessage] = useState<string>('')
   const [suggestionText, setSuggestionText] = useState<string>('')
   const [suggestionMessage, setSuggestionMessage] = useState<string>('')
-  // const [suggestions, setSuggestions] = useState<any[]>([]) // Uncommented this line
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputText = e.target.value
@@ -30,15 +29,19 @@ const App: React.FC = () => {
   }
 
   const handleVote = async () => {
-    if (!hasVoted) {
+    try {
       const result = await vote()
       if (result.success) {
         setVoteCount(result.count ?? 0)
         setHasVoted(true)
-        // setVoteMessage(result.message?? '')
+        setVoteMessage(result.message ?? 'Voted successfully!')
       } else {
-        // setVoteMessage(result.message?? '')
+        setVoteMessage(result.message ?? 'Vote failed')
+        setHasVoted(false)
       }
+    } catch (error) {
+      setVoteMessage('An error occurred while voting')
+      setHasVoted(false)
     }
   }
 
@@ -116,25 +119,27 @@ const App: React.FC = () => {
               gap: '2rem'
             }}
           >
-            <div className="flex flex-col items-center space-y-4">
-              <button
-                onClick={handleVote}
-                disabled={hasVoted}
-                className={`px-6 py-2 text-sm font-medium rounded-full ${
-                  hasVoted
-                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
-                } transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
-              >
-                {hasVoted ? 'Voted' : 'Vote Your Eager'}
-              </button>
-              <p className="text-gray-400">
-                Eager Votes: <span className="font-bold text-cyan-400">{voteCount}</span>
-              </p>
-              {hasVoted && (
-                <p className="text-sm text-green-400">Thank you for your vote!</p>
-              )}
-            </div>
+      <div className="flex flex-col items-center space-y-4">
+        <button
+          onClick={handleVote}
+          disabled={hasVoted}
+          className={`px-6 py-2 text-sm font-medium rounded-full ${
+            hasVoted
+              ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
+          } transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
+        >
+          {hasVoted ? 'Voted' : 'Vote Your Eager'}
+        </button>
+        <p className="text-gray-400">
+          Eager Votes: <span className="font-bold text-cyan-400">{voteCount}</span>
+        </p>
+        {voteMessage && (
+          <p className={`text-sm ${hasVoted ? 'text-green-400' : 'text-red-500'}`}>
+            {voteMessage}
+          </p>
+        )}
+      </div>
           </motion.div>
           <div className="w-full max-w-md mx-auto px-4 sm:px-10 md:px-16 py-6 sm:py-8 md:py-10 rounded-none sm:rounded-xl md:rounded-2xl shadow-input bg-transparent dark:bg-black">
             <h2 className="font-bold text-lg sm:text-xl md:text-2xl text-slate-300 dark:text-neutral-200 mb-4 sm:mb-6">
