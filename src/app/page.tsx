@@ -15,10 +15,10 @@ const MAX_CHARACTERS = 100
 const App: React.FC = () => {
   const [voteCount, setVoteCount] = useState<number>(0)
   const [hasVoted, setHasVoted] = useState<boolean>(false)
-  const [voteMessage, setVoteMessage] = useState<string>('')
+  // const [voteMessage, setVoteMessage] = useState<string>('')
   const [suggestionText, setSuggestionText] = useState<string>('')
   const [suggestionMessage, setSuggestionMessage] = useState<string>('')
-  const [suggestions, setSuggestions] = useState<any[]>([]) // Uncommented this line
+  // const [suggestions, setSuggestions] = useState<any[]>([]) // Uncommented this line
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputText = e.target.value
