@@ -99,7 +99,7 @@ const App: React.FC = () => {
               lineHeight: '1.625'
             }}
           >
-            We&apos;re crafting something extraordinary. Our innovative platform is under development, bringing the future of technology right to your doorstep.
+            I&apos;am building an exciting platform to bring you the latest in tech&apos;, from product reviews and robotics to programming&apos;, mobile dev&apos;, and more! Stay tuned!
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
