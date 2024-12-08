@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
-import { SparklesCore } from '@/components/ui/sparkles'
 
 const MAX_CHARACTERS = 100
 
