@@ -207,7 +207,8 @@ const Navbar = ({ className }: { className?: string }) => {
   };
 
   return (
-    <header className={cn("sticky top-10 z-50 w-full", className)}>
+<header className={cn("sticky top-10 z-50 w-full max-w-[90%] sm:max-w-[75%] mx-auto", className)}>
+<div className="absolute top-2 left-0 w-full  h-7 bg-gradient-to-r blur-xl from-purple-700 via-slate-400 to-blue-700 opacity-90"></div>
       <div className="container mx-auto">
         <div className="relative mx-4 flex h-16 items-center justify-between rounded-full bg-opacity-30 bg-neutral-700 px-4 text-sm font-medium text-zinc-200 shadow-lg backdrop-blur-md">
           {/* Logo */}
