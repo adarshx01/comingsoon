@@ -1,6 +1,8 @@
+
 "use client"
 import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, HTMLMotionProps } from 'framer-motion';
+import { FC } from 'react';
 import Navbar from "@/components/Navbar"
 import { vote, submitSuggestion, getSuggestions, getVoteCount } from '@/server/VoteHelper'
 import { BackgroundBeams } from '@/components/ui/background-beams'
@@ -9,13 +11,12 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
 import { SparklesCore } from '@/components/ui/sparkles'
-import { HTMLMotionProps } from 'framer-motion';
 
-type MotionPProps = HTMLMotionProps<'p'> & React.HTMLAttributes<HTMLParagraphElement>;
-
-const MotionP: React.FC<MotionPProps> = motion.p;
 const MAX_CHARACTERS = 100
-
+type MotionParagraphProps = HTMLMotionProps<'p'>;
+type MotionDivProps = HTMLMotionProps<'div'>;
+const MotionParagraph: FC<MotionParagraphProps> = motion.p;
+const MotionDiv: FC<MotionDivProps> = motion.div;
 const App: React.FC = () => {
   const [voteCount, setVoteCount] = useState<number>(0)
   const [hasVoted, setHasVoted] = useState<boolean>(false)
@@ -108,6 +109,7 @@ const App: React.FC = () => {
                 <div className="absolute inset-0 w-full h-full bg-black [mask-image:radial-gradient(350px_200px_at_top,transparent_20%,white)]"></div>
               </div>
             </div>
+        
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
         
           {/* <motion.h1
@@ -119,15 +121,15 @@ const App: React.FC = () => {
             Coming Soon
           </motion.h1> */}
           
-          <motion.p
+          <MotionParagraph
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.8 }}
             className="text-sm md:text-lg text-gray-300 max-w-xl mx-auto leading-relaxed"
           >
             We&apos;re crafting something extraordinary. Our innovative platform is under development, bringing the future of technology right to your doorstep.
-          </motion.p>
-          <motion.div
+          </MotionParagraph>
+          <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.1, duration: 0.8 }}
@@ -152,7 +154,7 @@ const App: React.FC = () => {
                 <p className="text-sm text-green-400">Thank you for your vote!</p>
               )}
             </div>
-          </motion.div>
+          </MotionDiv>
           <div className="w-full max-w-md mx-auto px-4 sm:px-10 md:px-16 py-6 sm:py-8 md:py-10 rounded-none sm:rounded-xl md:rounded-2xl shadow-input bg-transparent dark:bg-black">
             <h2 className="font-bold text-lg sm:text-xl md:text-2xl text-slate-300 dark:text-neutral-200 mb-4 sm:mb-6">
               Give Us Your Suggestion
