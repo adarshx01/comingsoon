@@ -31,11 +31,11 @@ const App: React.FC = () => {
     if (!hasVoted) {
       const result = await vote()
       if (result.success) {
-        setVoteCount(result.count)
+        setVoteCount(result.count ?? 0)
         setHasVoted(true)
-        setVoteMessage(result.message)
+        // setVoteMessage(result.message?? '')
       } else {
-        setVoteMessage(result.message)
+        // setVoteMessage(result.message?? '')
       }
     }
   }
@@ -44,13 +44,13 @@ const App: React.FC = () => {
     e.preventDefault()
     const result = await submitSuggestion(suggestionText)
     if (result.success) {
-      setSuggestionMessage(result.message)
+      setSuggestionMessage(result.message?? '')
       setSuggestionText('')
       if (result.suggestions) {
-        setSuggestions(result.suggestions)
+        // setSuggestions(result.suggestions?? '')
       }
     } else {
-      setSuggestionMessage(result.message)
+      setSuggestionMessage(result.message ?? '')
     }
   }
 
@@ -58,13 +58,13 @@ const App: React.FC = () => {
     const fetchInitialData = async () => {
       const voteResult = await getVoteCount()
       if (voteResult.success) {
-        setVoteCount(voteResult.count)
+        setVoteCount(voteResult.count?? 0)
       }
       
       // Uncomment this block to fetch suggestions
       const suggestionsResult = await getSuggestions()
       if (suggestionsResult.success && suggestionsResult.suggestions) {
-        setSuggestions(suggestionsResult.suggestions)
+        // setSuggestions(suggestionsResult.suggestions?? '')
       }
     }
     fetchInitialData()
