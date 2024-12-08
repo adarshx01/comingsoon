@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
 
+
 const MAX_CHARACTERS = 100
 
 const App: React.FC = () => {
@@ -81,21 +82,11 @@ const App: React.FC = () => {
         
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
         
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            style={{
-              fontSize: "2.25rem", 
-              fontWeight: "bold",  
-              marginBottom: "2rem", 
-              "@media (min-width: 768px)": {
-                fontSize: "3rem", 
-              },
-            }}
+          <span
+            className="text-4xl md:text-5xl font-bold mb-8"
           >
             Coming Soon
-          </motion.h1>
+          </span>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
