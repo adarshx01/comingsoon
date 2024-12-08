@@ -1,15 +1,19 @@
-
 "use client"
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Navbar from "@/components/Navbar"
-import { vote, submitSuggestion, getSuggestions, getVoteCount } from '@/server/VoteHelper'
+import { 
+  handleVote, 
+  handleSuggestion, 
+  getVoteCount, 
+  getSuggestions 
+} from '@/server/VoteHelper'
 import { BackgroundBeams } from '@/components/ui/background-beams'
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
-
+import { ClientIpPayload } from '@/lib/types'
 
 const MAX_CHARACTERS = 100
 
@@ -17,9 +21,55 @@ const App: React.FC = () => {
   const message = "I'm building a platform to bring you the latest in tech, from product reviews & robotics to programming, mobile dev, and more! Stay tuned!";
   const [voteCount, setVoteCount] = useState<number>(0)
   const [hasVoted, setHasVoted] = useState<boolean>(false)
-  const [voteMessage, setVoteMessage] = useState<string>('')
   const [suggestionText, setSuggestionText] = useState<string>('')
   const [suggestionMessage, setSuggestionMessage] = useState<string>('')
+  const [clientIp, setClientIp] = useState<ClientIpPayload>({ ipv4: null, ipv6: null })
+
+  // Robust IP detection
+  const fetchClientIp = async (): Promise<ClientIpPayload> => {
+    try {
+      // Attempt to fetch from public APIs
+      const [ipv4Response, ipv6Response] = await Promise.allSettled([
+        fetch('https://api.ipify.org?format=json'),
+        fetch('https://api6.ipify.org?format=json')
+      ]);
+
+      let ipv4 = null;
+      let ipv6 = null;
+
+      if (ipv4Response.status === 'fulfilled') {
+        try {
+          const data = await ipv4Response.value.json();
+          ipv4 = data.ip;
+        } catch {}
+      }
+
+      if (ipv6Response.status === 'fulfilled') {
+        try {
+          const data = await ipv6Response.value.json();
+          ipv6 = data.ip;
+        } catch {}
+      }
+
+      // Fallback to Cloudflare headers if available
+      if (!ipv4 && typeof window !== 'undefined') {
+        ipv4 = (window as any).cf?.ip || null;
+      }
+
+      return { ipv4, ipv6 };
+    } catch (error) {
+      console.error('IP retrieval error:', error);
+      return { ipv4: null, ipv6: null };
+    }
+  }
+
+  useEffect(() => {
+    const initializeIp = async () => {
+      const detectedIp = await fetchClientIp();
+      setClientIp(detectedIp);
+    };
+    initializeIp();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputText = e.target.value
@@ -28,52 +78,59 @@ const App: React.FC = () => {
     }
   }
 
-  const handleVote = async () => {
-    try {
-      const result = await vote()
+  const handleVoteSubmit = async () => {
+    if (!hasVoted) {
+      const result = await handleVote(clientIp);
       if (result.success) {
         setVoteCount(result.count ?? 0)
         setHasVoted(true)
-        setVoteMessage(result.message ?? 'Voted successfully!')
+        setSuggestionMessage(result.message ?? '')
       } else {
-        setVoteMessage(result.message ?? 'Vote failed')
-        setHasVoted(false)
+        setSuggestionMessage(result.message ?? 'Vote failed')
       }
-    } catch (error) {
-      setVoteMessage('An error occurred while voting')
-      setHasVoted(false)
     }
   }
 
   const handleSuggestionSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const result = await submitSuggestion(suggestionText)
+    
+    // Validate suggestion before submission
+    if (suggestionText.trim().length < 10) {
+      setSuggestionMessage("Suggestion must be at least 10 characters long");
+      return;
+    }
+
+    const result = await handleSuggestion({
+      text: suggestionText,
+      clientIp: clientIp
+    });
+
     if (result.success) {
-      setSuggestionMessage(result.message?? '')
-      setSuggestionText('')
-      if (result.suggestions) {
-        // setSuggestions(result.suggestions?? '')
-      }
-    } else {
       setSuggestionMessage(result.message ?? '')
+      setSuggestionText('')
+    } else {
+      setSuggestionMessage(result.message ?? 'Suggestion submission failed')
     }
   }
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      const voteResult = await getVoteCount()
-      if (voteResult.success) {
-        setVoteCount(voteResult.count?? 0)
-      }
-      
-      // Uncomment this block to fetch suggestions
-      const suggestionsResult = await getSuggestions()
-      if (suggestionsResult.success && suggestionsResult.suggestions) {
-        // setSuggestions(suggestionsResult.suggestions?? '')
+      try {
+        const voteResult = await getVoteCount();
+        if (voteResult.success) {
+          setVoteCount(voteResult.count ?? 0)
+        }
+        
+        // Optionally fetch suggestions if needed
+        const suggestionsResult = await getSuggestions();
+        // Handle suggestions if required
+      } catch (error) {
+        console.error('Initial data fetch error:', error);
       }
     }
     fetchInitialData()
   }, [])
+
 
   return (
     <main className="min-h-screen w-full bg-black text-white">
@@ -119,27 +176,25 @@ const App: React.FC = () => {
               gap: '2rem'
             }}
           >
-      <div className="flex flex-col items-center space-y-4">
-        <button
-          onClick={handleVote}
-          disabled={hasVoted}
-          className={`px-6 py-2 text-sm font-medium rounded-full ${
-            hasVoted
-              ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
-          } transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
-        >
-          {hasVoted ? 'Voted' : 'Vote Your Eager'}
-        </button>
-        <p className="text-gray-400">
-          Eager Votes: <span className="font-bold text-cyan-400">{voteCount}</span>
-        </p>
-        {voteMessage && (
-          <p className={`text-sm ${hasVoted ? 'text-green-400' : 'text-red-500'}`}>
-            {voteMessage}
-          </p>
-        )}
-      </div>
+            <div className="flex flex-col items-center space-y-4">
+              <button
+                onClick={handleVoteSubmit}
+                disabled={hasVoted}
+                className={`px-6 py-2 text-sm font-medium rounded-full ${
+                  hasVoted
+                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
+                } transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
+              >
+                {hasVoted ? 'Voted' : 'Vote Your Eager'}
+              </button>
+              <p className="text-gray-400">
+                Eager Votes: <span className="font-bold text-cyan-400">{voteCount}</span>
+              </p>
+              {hasVoted && (
+                <p className="text-sm text-green-400">Thank you for your vote!</p>
+              )}
+            </div>
           </motion.div>
           <div className="w-full max-w-md mx-auto px-4 sm:px-10 md:px-16 py-6 sm:py-8 md:py-10 rounded-none sm:rounded-xl md:rounded-2xl shadow-input bg-transparent dark:bg-black">
             <h2 className="font-bold text-lg sm:text-xl md:text-2xl text-slate-300 dark:text-neutral-200 mb-4 sm:mb-6">

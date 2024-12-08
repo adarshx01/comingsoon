@@ -1,64 +1,39 @@
+// server/VoteHelper.ts
 'use server'
 
-import { db } from '@/db';
-import axios from 'axios';
 import { z } from 'zod';
-
+import { db } from '@/db';
+import { ServiceResult, ClientIpPayload, SuggestionData } from '@/lib/types';
 
 const SuggestionSchema = z.object({
-  text: z.string().trim().min(10, { message: "Suggestion must be at least 10 characters long" })
+  text: z.string().trim().min(10, { message: "Suggestion must be at least 10 characters long" }),
+  clientIp: z.object({
+    ipv4: z.string().nullable(),
+    ipv6: z.string().nullable()
+  })
 });
 
-
-interface ServiceResult {
-  success: boolean;
-  message?: string;
-  count?: number;
-  suggestions?: any[];
-}
-
-
-async function fetchIpAddresses(): Promise<{ ipv4: string | null; ipv6: string | null }> {
+export async function handleVote(clientIp: ClientIpPayload): Promise<ServiceResult> {
   try {
-
-    const [ipv4Response, ipv6Response] = await Promise.all([
-      axios.get('https://api.ipify.org?format=json').catch(() => ({ data: { ip: null } })),
-      axios.get('https://api6.ipify.org?format=json').catch(() => ({ data: { ip: null } }))
-    ]);
-
-    return {
-      ipv4: ipv4Response.data.ip,
-      ipv6: ipv6Response.data.ip
-    };
-  } catch (error) {
-    console.error('IP retrieval error:', error);
-    return { ipv4: null, ipv6: null };
-  }
-}
-
-
-export async function vote(): Promise<ServiceResult> {
-  try {
-  
-    const { ipv4, ipv6 } = await fetchIpAddresses();
-
- 
-    if (!ipv4 && !ipv6) {
+    // Validate IP input
+    if (!clientIp || (!clientIp.ipv4 && !clientIp.ipv6)) {
       return {
         success: false,
         message: "Unable to determine your IP address. Please try again."
       };
     }
 
+    // Check for existing vote
     const existingVote = await db.vote.findFirst({
       where: {
         OR: [
-          { ipv4: ipv4 || undefined },
-          { ipv6: ipv6 || undefined }
+          { ipv4: clientIp.ipv4 || undefined },
+          { ipv6: clientIp.ipv6 || undefined }
         ]
       }
     });
 
+    // If already voted
     if (existingVote) {
       const voteCount = await db.vote.count();
       return {
@@ -68,15 +43,15 @@ export async function vote(): Promise<ServiceResult> {
       };
     }
 
-
-    const newVote = await db.vote.create({
+    // Create new vote
+    await db.vote.create({
       data: {
-        ipv4: ipv4 || undefined,
-        ipv6: ipv6 || undefined
+        ipv4: clientIp.ipv4 || undefined,
+        ipv6: clientIp.ipv6 || undefined
       }
     });
 
-
+    // Get updated vote count
     const voteCount = await db.vote.count();
 
     return {
@@ -85,21 +60,18 @@ export async function vote(): Promise<ServiceResult> {
       message: "Thank you for voting!"
     };
   } catch (error) {
-    console.error("Error during voting:", error);
+    console.error("Vote Error:", error);
     return {
       success: false,
-      message: `Failed to process your vote: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`
+      message: `Vote failed: ${error instanceof Error ? error.message : 'Unknown error'}`
     };
   }
 }
 
-
-export async function submitSuggestion(suggestionText: string): Promise<ServiceResult> {
+export async function handleSuggestion(suggestionData: SuggestionData): Promise<ServiceResult> {
   try {
-   
-    const validationResult = SuggestionSchema.safeParse({ text: suggestionText });
+    // Validate input
+    const validationResult = SuggestionSchema.safeParse(suggestionData);
     
     if (!validationResult.success) {
       return {
@@ -108,42 +80,27 @@ export async function submitSuggestion(suggestionText: string): Promise<ServiceR
       };
     }
 
-    const { ipv4, ipv6 } = await fetchIpAddresses();
+    const { text, clientIp } = suggestionData;
 
- 
-    if (!ipv4 && !ipv6) {
+    // Validate IP
+    if (!clientIp || (!clientIp.ipv4 && !clientIp.ipv6)) {
       return {
         success: false,
         message: "Unable to determine your IP address. Please try again."
       };
     }
 
-    const existingVote = await db.vote.findFirst({
-      where: {
-        OR: [
-          { ipv4: ipv4 || undefined },
-          { ipv6: ipv6 || undefined }
-        ]
-      },
-      
-    });
-
-    // if (!existingVote) {
-    //   return {
-    //     success: false,
-    //     message: "You must vote before submitting a suggestion."
-    //   };
-    // }
-
+    // Check for existing suggestion
     const existingSuggestion = await db.suggestion.findFirst({
       where: {
         OR: [
-          { ipv4: ipv4 || undefined },
-          { ipv6: ipv6 || undefined }
+          { ipv4: clientIp.ipv4 || undefined },
+          { ipv6: clientIp.ipv6 || undefined }
         ]
       }
     });
 
+    // If already submitted
     if (existingSuggestion) {
       return {
         success: false,
@@ -151,17 +108,18 @@ export async function submitSuggestion(suggestionText: string): Promise<ServiceR
       };
     }
 
-  
+    // Create suggestion
     await db.suggestion.create({
       data: {
-        text: suggestionText,
-        ipv4: ipv4 || undefined,
-        ipv6: ipv6 || undefined,
-        voteIpv4: ipv4 || undefined,
-        voteIpv6: ipv6 || undefined
+        text: text,
+        ipv4: clientIp.ipv4 || undefined,
+        ipv6: clientIp.ipv6 || undefined,
+        voteIpv4: clientIp.ipv4 || undefined,
+        voteIpv6: clientIp.ipv6 || undefined
       }
     });
 
+    // Fetch recent suggestions
     const suggestions = await db.suggestion.findMany({
       orderBy: { createdAt: 'desc' },
       take: 10, 
@@ -178,16 +136,30 @@ export async function submitSuggestion(suggestionText: string): Promise<ServiceR
       suggestions: suggestions
     };
   } catch (error) {
-    console.error("Error submitting suggestion:", error);
+    console.error("Suggestion Error:", error);
     return {
       success: false,
-      message: `Failed to submit suggestion: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`
+      message: `Suggestion failed: ${error instanceof Error ? error.message : 'Unknown error'}`
     };
   }
 }
 
+export async function getVoteCount(): Promise<ServiceResult> {
+  try {
+    const voteCount = await db.vote.count();
+    return { 
+      success: true, 
+      count: voteCount 
+    };
+  } catch (error) {
+    console.error("Vote Count Error:", error);
+    return {
+      success: false,
+      count: 0,
+      message: `Failed to fetch vote count: ${error instanceof Error ? error.message : 'Unknown error'}`
+    };
+  }
+}
 
 export async function getSuggestions(): Promise<ServiceResult> {
   try {
@@ -206,31 +178,10 @@ export async function getSuggestions(): Promise<ServiceResult> {
       suggestions: suggestions
     };
   } catch (error) {
-    console.error("Error fetching suggestions:", error);
+    console.error("Suggestions Fetch Error:", error);
     return {
       success: false,
-      message: `Failed to fetch suggestions: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`
-    };
-  }
-}
-
-export async function getVoteCount(): Promise<ServiceResult> {
-  try {
-    const voteCount = await db.vote.count();
-    return { 
-      success: true, 
-      count: voteCount 
-    };
-  } catch (error) {
-    console.error("Error getting vote count:", error);
-    return {
-      success: false,
-      count: 0,
-      message: `Failed to fetch vote count: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`
+      message: `Failed to fetch suggestions: ${error instanceof Error ? error.message : 'Unknown error'}`
     };
   }
 }
