@@ -9,7 +9,11 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
 import { SparklesCore } from '@/components/ui/sparkles'
+import { HTMLMotionProps } from 'framer-motion';
 
+type MotionPProps = HTMLMotionProps<'p'> & React.HTMLAttributes<HTMLParagraphElement>;
+
+const MotionP: React.FC<MotionPProps> = motion.p;
 const MAX_CHARACTERS = 100
 
 const App: React.FC = () => {
