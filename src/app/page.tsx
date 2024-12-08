@@ -1,8 +1,7 @@
 
 "use client"
 import React, { useState, useEffect } from 'react'
-import { motion, HTMLMotionProps } from 'framer-motion';
-import { FC } from 'react';
+import { motion } from 'framer-motion'
 import Navbar from "@/components/Navbar"
 import { vote, submitSuggestion, getSuggestions, getVoteCount } from '@/server/VoteHelper'
 import { BackgroundBeams } from '@/components/ui/background-beams'
@@ -13,10 +12,7 @@ import { Button } from '@/components/ui/button'
 import { SparklesCore } from '@/components/ui/sparkles'
 
 const MAX_CHARACTERS = 100
-type MotionParagraphProps = HTMLMotionProps<'p'>;
-type MotionDivProps = HTMLMotionProps<'div'>;
-const MotionParagraph: FC<MotionParagraphProps> = motion.p;
-const MotionDiv: FC<MotionDivProps> = motion.div;
+
 const App: React.FC = () => {
   const [voteCount, setVoteCount] = useState<number>(0)
   const [hasVoted, setHasVoted] = useState<boolean>(false)
@@ -120,20 +116,30 @@ const App: React.FC = () => {
           >
             Coming Soon
           </motion.h1> */}
-          
-          <MotionParagraph
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.8 }}
-            className="text-sm md:text-lg text-gray-300 max-w-xl mx-auto leading-relaxed"
+            style={{
+              fontSize: '0.875rem', // text-sm
+              color: 'rgb(209 213 219)', // text-gray-300
+              maxWidth: '36rem',
+              margin: '0 auto',
+              lineHeight: '1.625'
+            }}
           >
             We&apos;re crafting something extraordinary. Our innovative platform is under development, bringing the future of technology right to your doorstep.
-          </MotionParagraph>
-          <MotionDiv
+          </motion.p>
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.1, duration: 0.8 }}
-            className="mt-12 space-y-8"
+            style={{
+              marginTop: '3rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '2rem'
+            }}
           >
             <div className="flex flex-col items-center space-y-4">
               <button
@@ -154,7 +160,7 @@ const App: React.FC = () => {
                 <p className="text-sm text-green-400">Thank you for your vote!</p>
               )}
             </div>
-          </MotionDiv>
+          </motion.div>
           <div className="w-full max-w-md mx-auto px-4 sm:px-10 md:px-16 py-6 sm:py-8 md:py-10 rounded-none sm:rounded-xl md:rounded-2xl shadow-input bg-transparent dark:bg-black">
             <h2 className="font-bold text-lg sm:text-xl md:text-2xl text-slate-300 dark:text-neutral-200 mb-4 sm:mb-6">
               Give Us Your Suggestion
